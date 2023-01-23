@@ -6,6 +6,7 @@ from airflow.decorators import dag, task
 
 log = logging.getLogger(__name__)
 
+
 requirements = ["requests", "psycopg2-binary"]
 
 if not shutil.which("virtualenv"):
@@ -14,6 +15,7 @@ else:
 
     @dag(schedule=timedelta(days=1), start_date=datetime(2021, 1, 1), catchup=False, tags=["remotive", "software_jobs"])
     def consume_remotive():
+
         @task.virtualenv(
             use_dill=True,
             system_site_packages=False,
@@ -30,10 +32,9 @@ else:
             sys.path.append("/home/paolo/airflow/dags")
 
             from custom_code import custom_lib as cl
-            now = cl.date_utils.get_today_string()
             fs = cl.filesystem.DataFilesystem(f"remotive")
 
-            filename = f"{now}_remotive.json"
+            filename = cl.path_utils.get_today_remotive()
             json = fs.read_json(filename)
 
             if json is None:
