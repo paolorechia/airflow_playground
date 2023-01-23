@@ -1,28 +1,8 @@
-URL = "https://remotive.com/api/remote-jobs"
-
-# Licensed to the Apache Software Foundation (ASF) under one
-# or more contributor license agreements.  See the NOTICE file
-# distributed with this work for additional information
-# regarding copyright ownership.  The ASF licenses this file
-# to you under the Apache License, Version 2.0 (the
-# "License"); you may not use this file except in compliance
-# with the License.  You may obtain a copy of the License at
-#
-#   http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing,
-# software distributed under the License is distributed on an
-# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-# KIND, either express or implied.  See the License for the
-# specific language governing permissions and limitations
-# under the License.
-
 import logging
 import shutil
 from datetime import datetime, timedelta
 
 from airflow.decorators import dag, task
-
 
 log = logging.getLogger(__name__)
 
@@ -54,27 +34,22 @@ else:
             fs = cl.filesystem.DataFilesystem(f"remotive")
 
             filename = f"{now}_remotive.json"
-            json = fs.read_json(filename, json)
+            json = fs.read_json(filename)
 
             if json is None:
-                json = cl.remotive_api.GetJSON()
+                json = cl.remotive_api.get_json()
                 fs.write_dict_as_json(filename, json)
 
             return json
 
-        @task(multiple_outputs=True)
-        def transform(order_data_dict: dict):
+        @task()
+        def transform(json):
+            """Cleans up JSON.
+            
+            
+            To be done
             """
-            #### Transform task
-            A simple Transform task which takes in the collection of order data and
-            computes the total order value.
-            """
-            total_order_value = 0
-
-            for value in order_data_dict.values():
-                total_order_value += value
-
-            return {"total_order_value": total_order_value}
+            return json
 
         @task.virtualenv(
             use_dill=True,
@@ -84,20 +59,19 @@ else:
         def load(total_order_value: float):
             """
             #### Load task
-            A simple Load task which takes in the result of the Transform task and
-            instead of saving it to end user review, just prints it out.
+            A simple Load task which takes the result and saves to Postgres.
+            Not yet fully implemented.
             """
             import sys
             sys.path.append("/home/paolo/airflow/dags")
 
             from custom_code.custom_lib import database
             with database.PostgresConnection() as connection:
+                pass
 
-                print(f"Total order value is: {total_order_value:.2f}")
-
-        order_data = extract()
-        order_summary = transform(order_data)
-        load(order_summary["total_order_value"])
+        today_json = extract()
+        cleaned_json = transform(today_json)
+        load(cleaned_json)
 
 
     tutorial_dag = consume_remotive()

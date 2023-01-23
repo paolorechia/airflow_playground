@@ -1,4 +1,5 @@
 from custom_code.custom_lib import settings
+from typing import Optional
 import os
 import json
 
@@ -17,8 +18,11 @@ class DataFilesystem:
             json.dump(data, fp)
         
 
-    def read_json(self, filename: str) -> dict:
+    def read_json(self, filename: str) -> Optional[dict]:
         p = os.path.join(self.path, filename)
-        with open(p, "r") as fp:
-            j = json.load(fp)
-        return j
+        try:
+            with open(p, "r") as fp:
+                j = json.load(fp)
+            return j
+        except FileNotFoundError:
+            return None
