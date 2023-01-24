@@ -1,9 +1,9 @@
 from custom_code.custom_lib.date_utils import get_today_string
 from custom_code.custom_lib.filesystem import DataFilesystem
 
-def get_today_remotive() -> str:
+def get_today_remotive(fs="remotive") -> str:
     today_ = get_today_string()
-    fs = DataFilesystem("remotive")
+    fs = DataFilesystem(fs)
     return fs.path(f"{today_}_remotive.json")
 
 

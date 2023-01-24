@@ -6,3 +6,5 @@ from custom_code.custom_lib import remotive_api
 from custom_code.custom_lib import path_utils
 from custom_code.custom_lib import secrets
 from custom_code.custom_lib import currency_api
+from custom_code.custom_lib import filters
+from custom_code.custom_lib import salary
