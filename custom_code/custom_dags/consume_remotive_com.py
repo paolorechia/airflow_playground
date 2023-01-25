@@ -89,16 +89,49 @@ else:
             import sys
             sys.path.append("/home/paolo/airflow/dags")
 
+            from typing import Optional
             import pandas as pd
 
             from custom_code.custom_lib import database
+            from dataclasses import dataclass
+            cleaned_df = pd.read_json(transform["df_path"])
+            
+            @dataclass
+            class ColumnMapping:
+                db_column_name: str
+                db_column_type: str
+                df_column_name: str
+                db_column_constraints: Optional[str] = None
 
-            df_to_save = pd.DataFrame()
 
-            cleaned_df = pd.read_json(transform["df_path"])            
-            # df["location"]
+            columns_to_save = [
+                ColumnMapping('id','INT', 'id', 'PRIMARY KEY'),
+                ColumnMapping('url','VARCHAR(255)', "url"),
+                ColumnMapping('title', 'VARCHAR(64)', 'title'),
+                ColumnMapping('company_name', 'VARCHAR(64)', 'company_name'),
+                ColumnMapping('tags','VARCHAR(128)', 'tags'),
+                ColumnMapping('job_type', 'VARCHAR(32)', 'job_type'),
+                ColumnMapping('publication_date', 'VARCHAR(32)', 'publication_date'),
+                ColumnMapping('candidate_required_location', 'VARCHAR(32)', 'location'),
+                ColumnMapping('annual_salary_in_euros', 'DOUBLE PRECISION', 'salary'),
+                ColumnMapping('description', 'VARCHAR', 'description'),
+            ]
+
             with database.PostgresConnection() as connection:
-                pass
+                cursor = connection.cursor()
+                db_columns = []
+                for column in columns_to_save:
+                    create_col_definition = f"{column.db_column_name} {column.db_column_type}"
+                    if column.db_column_constraints:
+                        create_col_definition += f" {column.db_column_constraints}"
+                    db_columns.append(create_col_definition)
+
+                create_col_definition_query = ", ".join(db_columns)
+                query = f"CREATE TABLE IF NOT EXISTS software_jobs ({create_col_definition_query}) ;"
+                print(query)
+                cursor.execute(query)
+                connection.commit()
+                cursor.close()
 
         today_json = extract()
         cleaned_json = transform(today_json)

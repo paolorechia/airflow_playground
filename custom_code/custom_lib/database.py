@@ -1,7 +1,6 @@
 
 import psycopg2
 
-# TODO: use sqlalchemy + pandas
 class PostgresConnection:
     def __init__(self) -> None:
         self.conn = None
